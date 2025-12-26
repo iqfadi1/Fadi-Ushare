@@ -180,19 +180,20 @@ async def packages_cmd(msg: types.Message):
 
 @dp.callback_query()
 async def callbacks(call: types.CallbackQuery):
-    await call.answer()  # stop loading immediately
-
     if not is_admin(call.from_user.id):
+        await call.answer()
         return
 
     try:
         action, oid_s = call.data.split(":")
         oid = int(oid_s)
     except Exception:
+        await call.answer()
         return
 
     o = db.get_order(oid)
     if not o:
+        await call.answer("Order not found", show_alert=True)
         return
 
     if action == "approve":
@@ -203,10 +204,13 @@ async def callbacks(call: types.CallbackQuery):
         db.deduct_balance(o["phone"], int(o["package_price"]))
         db.update_order_status(oid, "approved")
         await call.message.edit_text("✅ Order Approved")
+        await call.answer()
 
     elif action == "reject":
         db.update_order_status(oid, "rejected")
         await call.message.edit_text("❌ Order Rejected")
+        await call.answer()
+
 
 # ================== RUN ==================
 
