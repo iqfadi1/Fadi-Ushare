@@ -149,3 +149,10 @@ def get_order(oid: int):
             (oid,),
         )
         return cur.fetchone()
+def update_order_status(oid: int, status: str):
+    with get_conn() as c:
+        cur = c.cursor()
+        cur.execute(
+            "UPDATE orders SET status = %s WHERE id = %s",
+            (status, oid),
+        )
