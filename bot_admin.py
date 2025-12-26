@@ -15,29 +15,29 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-def is_admin(user_id: int) -> bool:
-    return user_id == ADMIN_ID
+def is_admin(uid: int) -> bool:
+    return uid == ADMIN_ID
 
 # ================== BOT SENDER ==================
 
 class BotSender:
-    async def notify_new_order(self, order_id: int):
-        o = db.get_order(order_id)
+    async def notify_new_order(self, oid: int):
+        o = db.get_order(oid)
         if not o:
             return
 
         kb = InlineKeyboardMarkup(inline_keyboard=[[
-            InlineKeyboardButton(text="✅ Approve", callback_data=f"approve:{order_id}"),
-            InlineKeyboardButton(text="❌ Reject", callback_data=f"reject:{order_id}")
+            InlineKeyboardButton(text="✅ Approve", callback_data=f"approve:{oid}"),
+            InlineKeyboardButton(text="❌ Reject", callback_data=f"reject:{oid}")
         ]])
 
         text = (
-            "🆕 New Package Request\n\n"
+            "🆕 New Order\n\n"
             f"📱 Phone: {o['phone']}\n"
-            f"👤 User: {o['user_number']}\n\n"
+            f"👤 Number: {o['user_number']}\n"
             f"📦 Package: {o['package_name']}\n"
             f"💰 Price: {db.fmt_lbp(int(o['package_price']))} LBP\n"
-            f"💳 Current Balance: {db.fmt_lbp(int(o['balance']))} LBP\n\n"
+            f"💳 Balance: {db.fmt_lbp(int(o['balance']))} LBP\n"
             f"🧾 Order ID: {o['id']}"
         )
 
@@ -47,24 +47,8 @@ bot_sender = BotSender()
 
 # ================== COMMANDS ==================
 
-@dp.message(Command("start"))
-async def start_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-    await msg.answer(
-        "Admin Panel ✅\n\n"
-        "/createuser PHONE [PASSWORD]\n"
-        "/userinfo PHONE\n"
-        "/addbalance PHONE AMOUNT\n"
-        "/setbalance PHONE AMOUNT\n"
-        "/deductbalance PHONE AMOUNT\n"
-        "/packages\n"
-    )
-
-# ---------- USERS ----------
-
 @dp.message(Command("createuser"))
-async def createuser_cmd(msg: types.Message):
+async def create_user_cmd(msg: types.Message):
     if not is_admin(msg.from_user.id):
         return
 
@@ -81,7 +65,54 @@ async def createuser_cmd(msg: types.Message):
         return
 
     db.create_user(phone, hash_password(password))
-    await msg.answer(f"✅ User Created\n📱 Phone: {phone}\n🔑 Password: {password}")
+    await msg.answer(f"✅ User Created\n📱 {phone}\n🔑 {password}")
+
+@dp.message(Command("addbalance"))
+async def add_balance_cmd(msg: types.Message):
+    if not is_admin(msg.from_user.id):
+        return
+
+    parts = msg.text.split(maxsplit=2)
+    if len(parts) < 3:
+        await msg.answer("Usage: /addbalance PHONE AMOUNT")
+        return
+
+    phone = parts[1]
+    amount = parse_amount(parts[2])
+
+    u = db.get_user_by_phone(phone)
+    if not u:
+        await msg.answer("❌ User not found")
+        return
+
+    db.add_balance(phone, amount)
+    await msg.answer(
+        f"✅ Balance Updated\n"
+        f"📱 {phone}\n"
+        f"💰 New Balance: {db.fmt_lbp(int(u['balance']) + amount)} LBP"
+    )
+
+@dp.message(Command("userinfo"))
+async def user_info_cmd(msg: types.Message):
+    if not is_admin(msg.from_user.id):
+        return
+
+    parts = msg.text.split()
+    if len(parts) != 2:
+        await msg.answer("Usage: /userinfo PHONE")
+        return
+
+    u = db.get_user_by_phone(parts[1])
+    if not u:
+        await msg.answer("❌ User not found")
+        return
+
+    await msg.answer(
+        "👤 User Info\n\n"
+        f"📱 Phone: {u['phone']}\n"
+        f"💰 Balance: {db.fmt_lbp(int(u['balance']))} LBP\n"
+        f"🆔 ID: {u['id']}"
+    )
 
 # ================== CALLBACKS ==================
 
@@ -111,19 +142,13 @@ async def callbacks(call: types.CallbackQuery):
         db.deduct_balance(o["phone"], int(o["package_price"]))
         db.update_order_status(oid, "approved")
 
-        await call.message.edit_text(
-            "✅ Order Approved",
-            reply_markup=None
-        )
+        await call.message.edit_text("✅ Order Approved", reply_markup=None)
         await call.answer("Approved")
 
     elif action == "reject":
         db.update_order_status(oid, "rejected")
 
-        await call.message.edit_text(
-            "❌ Order Rejected",
-            reply_markup=None
-        )
+        await call.message.edit_text("❌ Order Rejected", reply_markup=None)
         await call.answer("Rejected")
 
 # ================== RUN ==================
