@@ -171,77 +171,17 @@ async def packages_cmd(msg: types.Message):
     pkgs = db.list_packages(active_only=False)
     text = "📦 Packages:\n\n"
     for p in pkgs:
-        status = "✅" if int(p["active"]) == 1 else "❌"
+        status = "✅" if bool(p["active"]) else "❌"
         text += f"{status} ID {p['id']} | {p['name']} | {db.fmt_lbp(int(p['price']))} LBP\n"
 
     await msg.answer(text)
-
-@dp.message(Command("addpackage"))
-async def addpackage_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split(maxsplit=2)
-    if len(parts) < 3:
-        await msg.answer("Usage: /addpackage PRICE NAME")
-        return
-
-    price = parse_amount(parts[1])
-    name = parts[2]
-
-    db.add_package(name, price)
-    await msg.answer(f"✅ Package added: {name}")
-
-@dp.message(Command("setprice"))
-async def setprice_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split()
-    if len(parts) != 3:
-        await msg.answer("Usage: /setprice PACKAGE_ID PRICE")
-        return
-
-    pid = int(parts[1])
-    price = parse_amount(parts[2])
-
-    db.set_package_price(pid, price)
-    await msg.answer("✅ Price updated")
-
-@dp.message(Command("setname"))
-async def setname_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split(maxsplit=2)
-    if len(parts) < 3:
-        await msg.answer("Usage: /setname PACKAGE_ID NAME")
-        return
-
-    pid = int(parts[1])
-    name = parts[2]
-
-    db.set_package_name(pid, name)
-    await msg.answer("✅ Name updated")
-
-@dp.message(Command("disablepackage"))
-async def disablepackage_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split()
-    if len(parts) != 2:
-        await msg.answer("Usage: /disablepackage PACKAGE_ID")
-        return
-
-    pid = int(parts[1])
-    db.disable_package(pid)
-    await msg.answer("✅ Package disabled")
 
 # ================== CALLBACKS ==================
 
 @dp.callback_query()
 async def callbacks(call: types.CallbackQuery):
+    await call.answer()  # stop loading immediately
+
     if not is_admin(call.from_user.id):
         return
 
@@ -249,12 +189,10 @@ async def callbacks(call: types.CallbackQuery):
         action, oid_s = call.data.split(":")
         oid = int(oid_s)
     except Exception:
-        await call.answer("Bad callback", show_alert=True)
         return
 
     o = db.get_order(oid)
     if not o:
-        await call.answer("Order not found", show_alert=True)
         return
 
     if action == "approve":
@@ -265,12 +203,10 @@ async def callbacks(call: types.CallbackQuery):
         db.deduct_balance(o["phone"], int(o["package_price"]))
         db.update_order_status(oid, "approved")
         await call.message.edit_text("✅ Order Approved")
-        await call.answer("Approved")
 
     elif action == "reject":
         db.update_order_status(oid, "rejected")
         await call.message.edit_text("❌ Order Rejected")
-        await call.answer("Rejected")
 
 # ================== RUN ==================
 
