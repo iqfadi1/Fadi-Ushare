@@ -132,3 +132,20 @@ def list_user_orders(user_id, limit=20):
             (user_id, limit),
         )
         return cur.fetchall()
+def get_order(oid: int):
+    with get_conn() as c:
+        cur = c.cursor()
+        cur.execute(
+            """SELECT o.id, o.status,
+                      o.user_number,
+                      u.phone,
+                      u.balance,
+                      p.name AS package_name,
+                      p.price AS package_price
+               FROM orders o
+               JOIN users u ON u.id = o.user_id
+               JOIN packages p ON p.id = o.package_id
+               WHERE o.id = %s""",
+            (oid,),
+        )
+        return cur.fetchone()
