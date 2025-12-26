@@ -116,3 +116,19 @@ def create_order(user_id, package_id, user_number):
             (user_id, package_id, user_number, datetime.utcnow()),
         )
         return cur.fetchone()["id"]
+def list_user_orders(user_id, limit=20):
+    with get_conn() as c:
+        cur = c.cursor()
+        cur.execute(
+            """SELECT o.id, o.status,
+                      o.user_number,
+                      p.name AS package_name,
+                      p.price AS package_price
+               FROM orders o
+               JOIN packages p ON p.id = o.package_id
+               WHERE o.user_id = %s
+               ORDER BY o.id DESC
+               LIMIT %s""",
+            (user_id, limit),
+        )
+        return cur.fetchall()
