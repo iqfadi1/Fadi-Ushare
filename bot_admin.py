@@ -59,10 +59,6 @@ async def start_cmd(msg: types.Message):
         "/setbalance PHONE AMOUNT\n"
         "/deductbalance PHONE AMOUNT\n"
         "/packages\n"
-        "/addpackage PRICE NAME\n"
-        "/setprice PACKAGE_ID PRICE\n"
-        "/setname PACKAGE_ID NAME\n"
-        "/disablepackage PACKAGE_ID\n"
     )
 
 # ---------- USERS ----------
@@ -86,95 +82,6 @@ async def createuser_cmd(msg: types.Message):
 
     db.create_user(phone, hash_password(password))
     await msg.answer(f"✅ User Created\n📱 Phone: {phone}\n🔑 Password: {password}")
-
-@dp.message(Command("userinfo"))
-async def userinfo_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split()
-    if len(parts) != 2:
-        await msg.answer("Usage: /userinfo PHONE")
-        return
-
-    u = db.get_user_by_phone(parts[1])
-    if not u:
-        await msg.answer("❌ User not found")
-        return
-
-    await msg.answer(
-        f"👤 User Info\n"
-        f"📱 Phone: {u['phone']}\n"
-        f"💰 Balance: {db.fmt_lbp(int(u['balance']))} LBP\n"
-        f"🆔 ID: {u['id']}"
-    )
-
-@dp.message(Command("addbalance"))
-async def addbalance_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split(maxsplit=2)
-    if len(parts) < 3:
-        await msg.answer("Usage: /addbalance PHONE AMOUNT")
-        return
-
-    phone = parts[1]
-    amt = parse_amount(parts[2])
-
-    if not db.get_user_by_phone(phone):
-        await msg.answer("❌ User not found")
-        return
-
-    db.add_balance(phone, amt)
-    await msg.answer(f"✅ Added {db.fmt_lbp(amt)} LBP to {phone}")
-
-@dp.message(Command("setbalance"))
-async def setbalance_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split(maxsplit=2)
-    if len(parts) < 3:
-        await msg.answer("Usage: /setbalance PHONE AMOUNT")
-        return
-
-    phone = parts[1]
-    amt = parse_amount(parts[2])
-
-    db.set_balance(phone, amt)
-    await msg.answer(f"✅ Balance set to {db.fmt_lbp(amt)} LBP for {phone}")
-
-@dp.message(Command("deductbalance"))
-async def deductbalance_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    parts = msg.text.split(maxsplit=2)
-    if len(parts) < 3:
-        await msg.answer("Usage: /deductbalance PHONE AMOUNT")
-        return
-
-    phone = parts[1]
-    amt = parse_amount(parts[2])
-
-    db.deduct_balance(phone, amt)
-    await msg.answer(f"✅ Deducted {db.fmt_lbp(amt)} LBP from {phone}")
-
-# ---------- PACKAGES ----------
-
-@dp.message(Command("packages"))
-async def packages_cmd(msg: types.Message):
-    if not is_admin(msg.from_user.id):
-        return
-
-    pkgs = db.list_packages(active_only=False)
-    text = "📦 Packages:\n\n"
-    for p in pkgs:
-        status = "✅" if bool(p["active"]) else "❌"
-        text += f"{status} ID {p['id']} | {p['name']} | {db.fmt_lbp(int(p['price']))} LBP\n"
-
-    await msg.answer(text)
 
 # ================== CALLBACKS ==================
 
@@ -203,14 +110,21 @@ async def callbacks(call: types.CallbackQuery):
 
         db.deduct_balance(o["phone"], int(o["package_price"]))
         db.update_order_status(oid, "approved")
-        await call.message.edit_text("✅ Order Approved")
-        await call.answer()
+
+        await call.message.edit_text(
+            "✅ Order Approved",
+            reply_markup=None
+        )
+        await call.answer("Approved")
 
     elif action == "reject":
         db.update_order_status(oid, "rejected")
-        await call.message.edit_text("❌ Order Rejected")
-        await call.answer()
 
+        await call.message.edit_text(
+            "❌ Order Rejected",
+            reply_markup=None
+        )
+        await call.answer("Rejected")
 
 # ================== RUN ==================
 
