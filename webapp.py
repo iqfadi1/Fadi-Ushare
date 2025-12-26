@@ -19,7 +19,7 @@ def create_app(bot_sender=None):
         secret_key=os.getenv("SECRET_KEY", "change-me")
     )
 
-    # Init DB (ONLY THIS)
+    # Init DB
     db.init_db()
 
     # --------------------
@@ -88,12 +88,15 @@ def create_app(bot_sender=None):
         oid = db.create_order(uid, package_id, user_number)
 
         if bot_sender:
-            await bot_sender.notify_new_order(oid)
+            try:
+                await bot_sender.notify_new_order(oid)
+            except Exception as e:
+                print("BOT ERROR:", e)
 
         return RedirectResponse("/dashboard", status_code=302)
 
     # --------------------
-    # Health check (UptimeRobot)
+    # Health check
     # --------------------
     @app.get("/healthz")
     async def healthz():
