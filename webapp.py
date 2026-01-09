@@ -8,6 +8,12 @@ import db
 from security import verify_password
 
 
+# =========================
+# ADMIN CONFIG
+# =========================
+ADMIN_PASSWORD = "Fadi!!@@11"   # كلمة سر الأدمن الثابتة
+
+
 def create_app(bot_sender=None):
     app = FastAPI()
 
@@ -27,6 +33,9 @@ def create_app(bot_sender=None):
     # --------------------
     def require_login(request: Request):
         return request.session.get("uid")
+
+    def require_admin(request: Request):
+        return request.session.get("admin_auth") == True
 
     # --------------------
     # Routes
@@ -55,6 +64,9 @@ def create_app(bot_sender=None):
         request.session["uid"] = int(user["id"])
         return RedirectResponse("/dashboard", status_code=302)
 
+    # =========================
+    # DASHBOARD
+    # =========================
     @app.get("/dashboard", response_class=HTMLResponse)
     async def dashboard(request: Request):
         uid = require_login(request)
@@ -75,6 +87,9 @@ def create_app(bot_sender=None):
             }
         )
 
+    # =========================
+    # BUY
+    # =========================
     @app.post("/buy")
     async def buy(
         request: Request,
@@ -94,6 +109,87 @@ def create_app(bot_sender=None):
                 print("BOT ERROR:", e)
 
         return RedirectResponse("/dashboard", status_code=302)
+
+    # =========================
+    # SECTIONS (PAGES)
+    # =========================
+    @app.get("/alfa", response_class=HTMLResponse)
+    async def alfa_page(request: Request):
+        uid = require_login(request)
+        if not uid:
+            return RedirectResponse("/", status_code=302)
+
+        return templates.TemplateResponse(
+            "alfa.html",
+            {"request": request}
+        )
+
+    @app.get("/netflix", response_class=HTMLResponse)
+    async def netflix_page(request: Request):
+        uid = require_login(request)
+        if not uid:
+            return RedirectResponse("/", status_code=302)
+
+        return templates.TemplateResponse(
+            "netflix.html",
+            {"request": request}
+        )
+
+    @app.get("/shahid", response_class=HTMLResponse)
+    async def shahid_page(request: Request):
+        uid = require_login(request)
+        if not uid:
+            return RedirectResponse("/", status_code=302)
+
+        return templates.TemplateResponse(
+            "shahid.html",
+            {"request": request}
+        )
+
+    # =========================
+    # ADMIN LOGIN (HIDDEN)
+    # =========================
+    @app.get("/admin", response_class=HTMLResponse)
+    async def admin_login_page(request: Request):
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "error": None}
+        )
+
+    @app.post("/admin")
+    async def admin_login(
+        request: Request,
+        password: str = Form(...)
+    ):
+        if password == ADMIN_PASSWORD:
+            request.session["admin_auth"] = True
+            return RedirectResponse("/admin/panel", status_code=302)
+
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "error": "Wrong password"}
+        )
+
+    # =========================
+    # ADMIN PANEL
+    # =========================
+    @app.get("/admin/panel", response_class=HTMLResponse)
+    async def admin_panel(request: Request):
+        if not require_admin(request):
+            return RedirectResponse("/admin", status_code=302)
+
+        return templates.TemplateResponse(
+            "admin_panel.html",
+            {"request": request}
+        )
+
+    # =========================
+    # ADMIN LOGOUT
+    # =========================
+    @app.get("/admin/logout")
+    async def admin_logout(request: Request):
+        request.session.pop("admin_auth", None)
+        return RedirectResponse("/admin", status_code=302)
 
     # --------------------
     # Health check
