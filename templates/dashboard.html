@@ -30,9 +30,9 @@
       align-items:center;
     }
 
-    /* ===== PAGE WIDTH (سر الترتيب) ===== */
+    /* ===== PAGE WIDTH ===== */
     .wrap{
-      max-width:420px;   /* نفس إحساس التطبيق */
+      max-width:420px;
       margin:0 auto;
       padding:12px;
     }
@@ -81,7 +81,7 @@
       background:#020617;
       color:#fff;
       width:100%;
-      font-size:16px; /* يمنع زوم iPhone */
+      font-size:16px;
     }
 
     button{
@@ -150,9 +150,12 @@
         {% for p in packages %}
           <div class="pkg">
 
-            <div>
+            <!-- ✅ الاسم + السعر جنب بعض -->
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
               <div style="font-weight:800">{{ p["name"] }}</div>
-              <div class="muted" style="font-size:13px">{{ fmt(p["price"]) }} LBP</div>
+              <div class="muted" style="font-size:13px;white-space:nowrap">
+                {{ fmt(p["price"]) }} LBP
+              </div>
             </div>
 
             <form method="post" action="/buy" style="margin:0">
