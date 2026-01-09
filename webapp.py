@@ -36,24 +36,17 @@ def create_app(bot_sender=None):
         if not user or not verify_password(password, user["password_hash"]):
             return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
         request.session["uid"] = int(user["id"])
-        return RedirectResponse("/alfa", status_code=302)
+        return RedirectResponse("/dashboard", status_code=302)
 
     @app.get("/dashboard", response_class=HTMLResponse)
     async def dashboard(request: Request):
-        if not require_login(request):
-            return RedirectResponse("/", status_code=302)
-        return RedirectResponse("/alfa", status_code=302)
-
-    # -------- ALFA --------
-    @app.get("/alfa", response_class=HTMLResponse)
-    async def alfa_page(request: Request):
         uid = require_login(request)
         if not uid:
             return RedirectResponse("/", status_code=302)
 
         user = db.get_user_by_id(uid)
         return templates.TemplateResponse(
-            "alfa.html",
+            "dashboard.html",
             {
                 "request": request,
                 "phone": user["phone"],
@@ -64,28 +57,33 @@ def create_app(bot_sender=None):
             }
         )
 
-    # -------- NETFLIX --------
+    # -------- SECTIONS --------
+    @app.get("/alfa", response_class=HTMLResponse)
+    async def alfa_page(request: Request):
+        return RedirectResponse("/dashboard", status_code=302)
+
     @app.get("/netflix", response_class=HTMLResponse)
     async def netflix_page(request: Request):
-        if not require_login(request):
+        uid = require_login(request)
+        if not uid:
             return RedirectResponse("/", status_code=302)
         return templates.TemplateResponse("netflix.html", {"request": request})
 
-    # -------- SHAHID --------
     @app.get("/shahid", response_class=HTMLResponse)
     async def shahid_page(request: Request):
-        if not require_login(request):
+        uid = require_login(request)
+        if not uid:
             return RedirectResponse("/", status_code=302)
         return templates.TemplateResponse("shahid.html", {"request": request})
 
-    # -------- BUY (ALFA) --------
+    # -------- BUY --------
     @app.post("/buy")
     async def buy(request: Request, package_id: int = Form(...), user_number: str = Form(...)):
         uid = require_login(request)
         if not uid:
             return RedirectResponse("/", status_code=302)
         db.create_order(uid, package_id, user_number)
-        return RedirectResponse("/alfa", status_code=302)
+        return RedirectResponse("/dashboard", status_code=302)
 
     # -------- ADMIN --------
     @app.get("/admin", response_class=HTMLResponse)

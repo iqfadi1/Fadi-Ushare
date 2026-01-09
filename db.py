@@ -49,16 +49,6 @@ def init_db():
         )
         """)
 
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS accounts (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            email TEXT NOT NULL,
-            password TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-        """)
-
         cur.execute("SELECT COUNT(*) FROM packages")
         if cur.fetchone()["count"] == 0:
             cur.executemany(
@@ -68,11 +58,19 @@ def init_db():
                     ("22 GB", 1200000),
                     ("33 GB", 1450000),
                     ("44 GB", 1860000),
+                    ("55 GB", 2280000),
                 ],
             )
 
 def fmt_lbp(amount: int) -> str:
     return f"{amount:,}"
+
+def create_user(phone, password_hash):
+    with get_conn() as c:
+        c.cursor().execute(
+            "INSERT INTO users(phone,password_hash,balance,created_at) VALUES (%s,%s,0,%s)",
+            (phone, password_hash, datetime.utcnow()),
+        )
 
 def get_user_by_phone(phone):
     with get_conn() as c:
@@ -85,6 +83,20 @@ def get_user_by_id(uid):
         cur = c.cursor()
         cur.execute("SELECT * FROM users WHERE id=%s", (uid,))
         return cur.fetchone()
+
+def add_balance(phone, amt):
+    with get_conn() as c:
+        c.cursor().execute(
+            "UPDATE users SET balance = balance + %s WHERE phone=%s",
+            (amt, phone),
+        )
+
+def deduct_balance(phone, amt):
+    with get_conn() as c:
+        c.cursor().execute(
+            "UPDATE users SET balance = balance - %s WHERE phone=%s",
+            (amt, phone),
+        )
 
 def list_packages(active_only=True):
     with get_conn() as c:
@@ -100,15 +112,16 @@ def create_order(user_id, package_id, user_number):
         cur = c.cursor()
         cur.execute(
             """INSERT INTO orders(user_id,package_id,user_number,status,created_at)
-               VALUES (%s,%s,%s,'pending',%s)""",
+               VALUES (%s,%s,%s,'pending',%s) RETURNING id""",
             (user_id, package_id, user_number, datetime.utcnow()),
         )
-
+        return cur.fetchone()["id"]
 def list_user_orders(user_id, limit=20):
     with get_conn() as c:
         cur = c.cursor()
         cur.execute(
             """SELECT o.id, o.status,
+                      o.user_number,
                       p.name AS package_name,
                       p.price AS package_price
                FROM orders o
@@ -119,11 +132,27 @@ def list_user_orders(user_id, limit=20):
             (user_id, limit),
         )
         return cur.fetchall()
-
-def create_account(user_id: int, email: str, password: str):
+def get_order(oid: int):
     with get_conn() as c:
         cur = c.cursor()
         cur.execute(
-            "INSERT INTO accounts (user_id, email, password) VALUES (%s, %s, %s)",
-            (user_id, email, password)
+            """SELECT o.id, o.status,
+                      o.user_number,
+                      u.phone,
+                      u.balance,
+                      p.name AS package_name,
+                      p.price AS package_price
+               FROM orders o
+               JOIN users u ON u.id = o.user_id
+               JOIN packages p ON p.id = o.package_id
+               WHERE o.id = %s""",
+            (oid,),
+        )
+        return cur.fetchone()
+def update_order_status(oid: int, status: str):
+    with get_conn() as c:
+        cur = c.cursor()
+        cur.execute(
+            "UPDATE orders SET status = %s WHERE id = %s",
+            (status, oid),
         )
