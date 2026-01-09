@@ -49,6 +49,16 @@ def init_db():
         )
         """)
 
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS accounts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            email TEXT NOT NULL,
+            password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """)
+
         cur.execute("SELECT COUNT(*) FROM packages")
         if cur.fetchone()["count"] == 0:
             cur.executemany(
@@ -116,6 +126,7 @@ def create_order(user_id, package_id, user_number):
             (user_id, package_id, user_number, datetime.utcnow()),
         )
         return cur.fetchone()["id"]
+
 def list_user_orders(user_id, limit=20):
     with get_conn() as c:
         cur = c.cursor()
@@ -132,6 +143,7 @@ def list_user_orders(user_id, limit=20):
             (user_id, limit),
         )
         return cur.fetchall()
+
 def get_order(oid: int):
     with get_conn() as c:
         cur = c.cursor()
@@ -149,6 +161,7 @@ def get_order(oid: int):
             (oid,),
         )
         return cur.fetchone()
+
 def update_order_status(oid: int, status: str):
     with get_conn() as c:
         cur = c.cursor()
@@ -156,7 +169,10 @@ def update_order_status(oid: int, status: str):
             "UPDATE orders SET status = %s WHERE id = %s",
             (status, oid),
         )
-\n
+
+# =========================
+# ADMIN FEATURE
+# =========================
 def create_account(user_id: int, email: str, password: str):
     with get_conn() as c:
         cur = c.cursor()
