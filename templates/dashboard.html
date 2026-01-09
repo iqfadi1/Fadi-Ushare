@@ -20,6 +20,21 @@
       color:#fff;
     }
 
+    /* ===== HOME IMAGE ===== */
+    .home-img{
+      width:100%;
+      height:180px;
+      background:#0b132b;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .home-img img{
+      max-width:90%;
+      max-height:160px;
+      object-fit:contain;
+    }
+
     /* ===== TOP BAR ===== */
     .top{
       padding:14px 12px;
@@ -30,7 +45,6 @@
       align-items:center;
     }
 
-    /* ===== PAGE WIDTH ===== */
     .wrap{
       max-width:420px;
       margin:0 auto;
@@ -43,7 +57,6 @@
       gap:16px;
     }
 
-    /* ===== CARD ===== */
     .card{
       background:#020617;
       border:1px solid #1f2937;
@@ -63,7 +76,6 @@
       margin-left:6px;
     }
 
-    /* ===== PACKAGE BLOCK ===== */
     .pkg{
       background:#020617;
       border:1px solid #1f2937;
@@ -78,7 +90,6 @@
       margin-bottom:6px;
     }
 
-    /* السعر بعد التصغير */
     .pkg-price{
       font-size:22px;
       font-weight:900;
@@ -87,7 +98,6 @@
       letter-spacing:0.5px;
     }
 
-    /* ===== FORM ===== */
     input{
       padding:12px;
       border-radius:10px;
@@ -122,7 +132,6 @@
       cursor:pointer;
     }
 
-    /* ===== TABLE ===== */
     .table-wrap{
       width:100%;
       overflow-x:auto;
@@ -150,114 +159,100 @@
 
 <body>
 
-  <!-- TOP -->
-  <div class="top">
-    <div>
-      <div style="font-weight:800">Ushare Alfa</div>
-      <div class="muted" style="font-size:13px">Phone: {{ phone }}</div>
-    </div>
-    <div>
-      <span class="pill">Balance: {{ balance }} LBP</span>
-      <a href="/logout" class="pill">Logout</a>
-    </div>
+<!-- ===== IMAGE ===== -->
+<div class="home-img">
+  <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Fadi Store">
+</div>
+
+<!-- ===== TOP ===== -->
+<div class="top">
+  <div>
+    <div style="font-weight:800">Ushare Alfa</div>
+    <div class="muted" style="font-size:13px">Phone: {{ phone }}</div>
   </div>
+  <div>
+    <span class="pill">Balance: {{ balance }} LBP</span>
+    <a href="/logout" class="pill">Logout</a>
+  </div>
+</div>
 
-  <!-- CONTENT -->
-  <div class="wrap">
-    <div class="grid">
+<!-- ===== CONTENT ===== -->
+<div class="wrap">
+  <div class="grid">
 
-      <!-- BUY PACKAGES -->
-      {% for p in packages %}
-      <div class="pkg">
+    {% for p in packages %}
+    <div class="pkg">
+      <div class="pkg-title">{{ p["name"] }}</div>
+      <div class="pkg-price">{{ fmt(p["price"]) }} LBP</div>
 
-        <div class="pkg-title">{{ p["name"] }}</div>
-        <div class="pkg-price">{{ fmt(p["price"]) }} LBP</div>
+      <form method="post" action="/buy" style="margin:0">
+        <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
 
-        <form method="post" action="/buy" style="margin:0">
-          <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
-
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input
-              type="text"
-              name="user_number"
-              placeholder="Add Number"
-              required
-              style="flex:1"
-            />
-
-            <button type="button"
-              class="paste-btn"
-              onclick="pasteNumber(this)">
-              📋
-            </button>
-          </div>
-
-          <button type="submit">Request</button>
-        </form>
-
-      </div>
-      {% endfor %}
-
-      <!-- ORDERS -->
-      <div class="card">
-        <h3 style="margin-top:0">My Orders</h3>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Package</th>
-                <th>Price</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-
-              {% for o in orders %}
-              <tr>
-                <td>{{ o["id"] }}</td>
-                <td>{{ o["package_name"] }}</td>
-                <td>{{ fmt(o["package_price"]) }}</td>
-                <td>
-                  {% if o["status"] == "approved" %}
-                    <span class="ok">Approved</span>
-                  {% elif o["status"] == "rejected" %}
-                    <span class="bad">Rejected</span>
-                  {% else %}
-                    <span class="pend">Pending</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-
-              {% if orders|length == 0 %}
-              <tr>
-                <td colspan="4" class="muted">No orders yet.</td>
-              </tr>
-              {% endif %}
-
-            </tbody>
-          </table>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" name="user_number" placeholder="Add Number" required style="flex:1"/>
+          <button type="button" class="paste-btn" onclick="pasteNumber(this)">📋</button>
         </div>
-      </div>
 
+        <button type="submit">Request</button>
+      </form>
     </div>
-  </div>
+    {% endfor %}
 
-  <!-- ===== PASTE SCRIPT ===== -->
-  <script>
-  async function pasteNumber(btn){
-    try{
-      const text = await navigator.clipboard.readText();
-      const wrap = btn.closest('form');
-      const input = wrap.querySelector('input[name="user_number"]');
-      input.value = text;
-    }catch(e){
-      alert("Clipboard access not allowed");
-    }
+    <div class="card">
+      <h3 style="margin-top:0">My Orders</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Package</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in orders %}
+            <tr>
+              <td>{{ o["id"] }}</td>
+              <td>{{ o["package_name"] }}</td>
+              <td>{{ fmt(o["package_price"]) }}</td>
+              <td>
+                {% if o["status"] == "approved" %}
+                  <span class="ok">Approved</span>
+                {% elif o["status"] == "rejected" %}
+                  <span class="bad">Rejected</span>
+                {% else %}
+                  <span class="pend">Pending</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            {% if orders|length == 0 %}
+            <tr>
+              <td colspan="4" class="muted">No orders yet.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+async function pasteNumber(btn){
+  try{
+    const text = await navigator.clipboard.readText();
+    const wrap = btn.closest('form');
+    const input = wrap.querySelector('input[name="user_number"]');
+    input.value = text;
+  }catch(e){
+    alert("Clipboard access not allowed");
   }
-  </script>
+}
+</script>
 
 </body>
 </html>
