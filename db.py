@@ -156,3 +156,11 @@ def update_order_status(oid: int, status: str):
             "UPDATE orders SET status = %s WHERE id = %s",
             (status, oid),
         )
+\n
+def create_account(user_id: int, email: str, password: str):
+    with get_conn() as c:
+        cur = c.cursor()
+        cur.execute(
+            "INSERT INTO accounts (user_id, email, password) VALUES (%s, %s, %s)",
+            (user_id, email, password)
+        )
