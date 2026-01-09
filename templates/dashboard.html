@@ -40,15 +40,15 @@
     .grid{
       display:grid;
       grid-template-columns:1fr;
-      gap:14px;
+      gap:16px;
     }
 
-    /* ===== CARDS ===== */
+    /* ===== CARD ===== */
     .card{
       background:#020617;
       border:1px solid #1f2937;
-      border-radius:14px;
-      padding:14px;
+      border-radius:16px;
+      padding:16px;
     }
 
     .muted{color:#cbd5e1}
@@ -63,20 +63,33 @@
       margin-left:6px;
     }
 
-    /* ===== PACKAGES ===== */
+    /* ===== PACKAGE BLOCK ===== */
     .pkg{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      padding:12px 0;
-      border-bottom:1px dashed #334155;
+      background:#020617;
+      border:1px solid #1f2937;
+      border-radius:16px;
+      padding:16px;
     }
-    .pkg:last-child{border-bottom:none}
+
+    .pkg-title{
+      font-size:18px;
+      font-weight:800;
+      text-align:center;
+      margin-bottom:6px;
+    }
+
+    .pkg-price{
+      font-size:26px;
+      font-weight:900;
+      text-align:center;
+      margin-bottom:14px;
+      letter-spacing:1px;
+    }
 
     /* ===== FORM ===== */
     input{
-      padding:10px;
-      border-radius:8px;
+      padding:12px;
+      border-radius:10px;
       border:1px solid #334155;
       background:#020617;
       color:#fff;
@@ -85,15 +98,27 @@
     }
 
     button{
-      padding:10px 12px;
+      padding:12px;
       border:none;
-      border-radius:10px;
+      border-radius:12px;
       background:#2563eb;
       color:#fff;
-      font-weight:700;
+      font-weight:800;
       cursor:pointer;
       font-size:16px;
       width:100%;
+    }
+
+    .paste-btn{
+      width:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#0b1220;
+      border:1px solid #334155;
+      border-radius:10px;
+      font-size:18px;
+      cursor:pointer;
     }
 
     /* ===== TABLE ===== */
@@ -110,8 +135,8 @@
     th,td{
       border-bottom:1px solid #1f2937;
       padding:8px;
-      text-align:left;
       font-size:13px;
+      text-align:left;
     }
 
     .ok{color:#22c55e}
@@ -140,43 +165,39 @@
   <div class="wrap">
     <div class="grid">
 
-      <!-- Buy Package -->
-      <div class="card">
-        <h3 style="margin-top:0">Buy Package</h3>
-        <div class="muted" style="margin-bottom:12px">
-          Enter the number, then request the package.
-        </div>
+      <!-- BUY PACKAGES -->
+      {% for p in packages %}
+      <div class="pkg">
 
-        {% for p in packages %}
-          <div class="pkg">
+        <div class="pkg-title">{{ p["name"] }}</div>
+        <div class="pkg-price">{{ fmt(p["price"]) }} LBP</div>
 
-            <!-- ✅ الاسم + السعر جنب بعض -->
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-              <div style="font-weight:800">{{ p["name"] }}</div>
-              <div class="muted" style="font-size:13px;white-space:nowrap">
-                {{ fmt(p["price"]) }} LBP
-              </div>
-            </div>
+        <form method="post" action="/buy" style="margin:0">
+          <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
 
-            <form method="post" action="/buy" style="margin:0">
-              <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input
+              type="text"
+              name="user_number"
+              placeholder="Add Number"
+              required
+              style="flex:1"
+            />
 
-              <input
-                type="text"
-                name="user_number"
-                placeholder="Add Number"
-                required
-                style="margin-bottom:8px"
-              />
-
-              <button type="submit">Request</button>
-            </form>
-
+            <button type="button"
+              class="paste-btn"
+              onclick="pasteNumber(this)">
+              📋
+            </button>
           </div>
-        {% endfor %}
-      </div>
 
-      <!-- Orders -->
+          <button type="submit">Request</button>
+        </form>
+
+      </div>
+      {% endfor %}
+
+      <!-- ORDERS -->
       <div class="card">
         <h3 style="margin-top:0">My Orders</h3>
 
@@ -222,6 +243,19 @@
 
     </div>
   </div>
+
+  <!-- ===== PASTE SCRIPT ===== -->
+  <script>
+  async function pasteNumber(btn){
+    try{
+      const text = await navigator.clipboard.readText();
+      const input = btn.parentElement.querySelector('input');
+      input.value = text;
+    }catch(e){
+      alert("Clipboard access not allowed");
+    }
+  }
+  </script>
 
 </body>
 </html>
