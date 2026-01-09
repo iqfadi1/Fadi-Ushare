@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- يمنع الزوم ويضبط العرض للجوال -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Ushare Alfa - Dashboard</title>
+
   <style>
     *{box-sizing:border-box}
     html,body{
@@ -13,34 +13,46 @@
       padding:0;
       overflow-x:hidden;
     }
-    body{font-family:Arial;background:#0f172a;color:#fff}
+
+    body{
+      font-family:Arial;
+      background:#0f172a;
+      color:#fff;
+    }
+
+    /* ===== TOP BAR ===== */
     .top{
       padding:14px 12px;
       border-bottom:1px solid #1f2937;
       background:#020617;
       display:flex;
-      gap:10px;
       justify-content:space-between;
-      align-items:flex-start;
-      flex-wrap:wrap; /* مهم للجوال */
+      align-items:center;
     }
-    .wrap{max-width:100%;margin:0 auto;padding:12px}
+
+    /* ===== PAGE WIDTH (سر الترتيب) ===== */
+    .wrap{
+      max-width:420px;   /* نفس إحساس التطبيق */
+      margin:0 auto;
+      padding:12px;
+    }
+
     .grid{
       display:grid;
       grid-template-columns:1fr;
       gap:14px;
     }
-    @media(min-width:900px){
-      .wrap{max-width:860px}
-      .grid{grid-template-columns:1.2fr 0.8fr}
-    }
+
+    /* ===== CARDS ===== */
     .card{
       background:#020617;
       border:1px solid #1f2937;
       border-radius:14px;
       padding:14px;
     }
+
     .muted{color:#cbd5e1}
+
     .pill{
       display:inline-block;
       padding:6px 10px;
@@ -48,19 +60,30 @@
       background:#0b1220;
       border:1px solid #334155;
       font-size:12px;
-      margin-top:6px;
+      margin-left:6px;
     }
+
+    /* ===== PACKAGES ===== */
     .pkg{
       display:flex;
-      flex-direction:column; /* للجوال */
+      flex-direction:column;
       gap:10px;
       padding:12px 0;
       border-bottom:1px dashed #334155;
     }
     .pkg:last-child{border-bottom:none}
-    @media(min-width:600px){
-      .pkg{flex-direction:row;align-items:center}
+
+    /* ===== FORM ===== */
+    input{
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #334155;
+      background:#020617;
+      color:#fff;
+      width:100%;
+      font-size:16px; /* يمنع زوم iPhone */
     }
+
     button{
       padding:10px 12px;
       border:none;
@@ -72,35 +95,36 @@
       font-size:16px;
       width:100%;
     }
-    input{
-      padding:10px;
-      border-radius:8px;
-      border:1px solid #334155;
-      background:#020617;
-      color:#fff;
-      width:100%;
-      font-size:16px; /* يمنع تكبير iOS */
-    }
+
+    /* ===== TABLE ===== */
     .table-wrap{
       width:100%;
-      overflow-x:auto; /* يمنع كسر الصفحة */
+      overflow-x:auto;
     }
-    table{width:100%;border-collapse:collapse;min-width:520px}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
     th,td{
       border-bottom:1px solid #1f2937;
       padding:8px;
       text-align:left;
       font-size:13px;
-      white-space:nowrap;
     }
+
     .ok{color:#22c55e}
     .bad{color:#ef4444}
     .pend{color:#f59e0b}
+
     a{color:#93c5fd;text-decoration:none}
   </style>
 </head>
+
 <body>
 
+  <!-- TOP -->
   <div class="top">
     <div>
       <div style="font-weight:800">Ushare Alfa</div>
@@ -108,10 +132,11 @@
     </div>
     <div>
       <span class="pill">Balance: {{ balance }} LBP</span>
-      <a href="/logout" style="margin-left:10px" class="pill">Logout</a>
+      <a href="/logout" class="pill">Logout</a>
     </div>
   </div>
 
+  <!-- CONTENT -->
   <div class="wrap">
     <div class="grid">
 
@@ -124,12 +149,13 @@
 
         {% for p in packages %}
           <div class="pkg">
-            <div style="flex:1">
+
+            <div>
               <div style="font-weight:800">{{ p["name"] }}</div>
               <div class="muted" style="font-size:13px">{{ fmt(p["price"]) }} LBP</div>
             </div>
 
-            <form method="post" action="/buy" style="flex:1;margin:0;width:100%">
+            <form method="post" action="/buy" style="margin:0">
               <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
 
               <input
@@ -142,6 +168,7 @@
 
               <button type="submit">Request</button>
             </form>
+
           </div>
         {% endfor %}
       </div>
@@ -149,6 +176,7 @@
       <!-- Orders -->
       <div class="card">
         <h3 style="margin-top:0">My Orders</h3>
+
         <div class="table-wrap">
           <table>
             <thead>
@@ -160,6 +188,7 @@
               </tr>
             </thead>
             <tbody>
+
               {% for o in orders %}
               <tr>
                 <td>{{ o["id"] }}</td>
@@ -178,10 +207,11 @@
               {% endfor %}
 
               {% if orders|length == 0 %}
-                <tr>
-                  <td colspan="4" class="muted">No orders yet.</td>
-                </tr>
+              <tr>
+                <td colspan="4" class="muted">No orders yet.</td>
+              </tr>
               {% endif %}
+
             </tbody>
           </table>
         </div>
