@@ -78,12 +78,13 @@
       margin-bottom:6px;
     }
 
+    /* 🔽 تم تصغير السعر هنا */
     .pkg-price{
-      font-size:26px;
+      font-size:22px;      /* كان 26px */
       font-weight:900;
       text-align:center;
       margin-bottom:14px;
-      letter-spacing:1px;
+      letter-spacing:0.5px;
     }
 
     /* ===== FORM ===== */
@@ -119,6 +120,15 @@
       border-radius:10px;
       font-size:18px;
       cursor:pointer;
+    }
+
+    .paste-ok{
+      color:#22c55e;
+      font-size:12px;
+      text-align:right;
+      margin-top:-6px;
+      margin-bottom:6px;
+      display:none;
     }
 
     /* ===== TABLE ===== */
@@ -175,7 +185,7 @@
         <form method="post" action="/buy" style="margin:0">
           <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
 
-          <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="display:flex;gap:8px;margin-bottom:6px">
             <input
               type="text"
               name="user_number"
@@ -190,6 +200,8 @@
               📋
             </button>
           </div>
+
+          <div class="paste-ok">✔ تم اللصق</div>
 
           <button type="submit">Request</button>
         </form>
@@ -249,8 +261,15 @@
   async function pasteNumber(btn){
     try{
       const text = await navigator.clipboard.readText();
-      const input = btn.parentElement.querySelector('input');
+      const wrap = btn.closest('form');
+      const input = wrap.querySelector('input[name="user_number"]');
+      const ok = wrap.querySelector('.paste-ok');
+
       input.value = text;
+
+      ok.style.display = 'block';
+      setTimeout(()=> ok.style.display='none', 1500);
+
     }catch(e){
       alert("Clipboard access not allowed");
     }
