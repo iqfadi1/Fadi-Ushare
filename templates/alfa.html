@@ -1,1 +1,16 @@
-<html><body><h2>ALFA USHARE</h2><a href='/dashboard'>Back</a></body></html>
+<!DOCTYPE html>
+<html><head><meta charset='UTF-8'><title>ALFA</title><meta name='viewport' content='width=device-width, initial-scale=1.0'></head>
+<body>
+<h2>ALFA USHARE</h2>
+<nav><a href='/alfa'>ALFA</a> | <a href='/netflix'>NETFLIX</a> | <a href='/shahid'>SHAHID</a></nav>
+{% for p in packages %}
+<div style='margin:10px 0;padding:10px;border:1px solid #ccc'>
+<b>{{ p["name"] }}</b> - {{ fmt(p["price"]) }} LBP
+<form method="post" action="/buy">
+<input type="hidden" name="package_id" value="{{ p['id'] }}">
+<input name="user_number" placeholder="Number">
+<button>Request</button>
+</form>
+</div>
+{% endfor %}
+</body></html>
