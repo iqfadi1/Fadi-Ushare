@@ -2,23 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- يمنع الزوم ويضبط العرض للجوال -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Ushare Alfa - Dashboard</title>
   <style>
-    body{font-family:Arial;background:#0f172a;color:#fff;margin:0}
-    .top{padding:18px 16px;border-bottom:1px solid #1f2937;background:#020617;display:flex;justify-content:space-between;align-items:center}
-    .wrap{max-width:860px;margin:0 auto;padding:16px}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    @media(min-width:900px){.grid{grid-template-columns:1.2fr 0.8fr}}
-    .card{background:#020617;border:1px solid #1f2937;border-radius:14px;padding:16px}
+    *{box-sizing:border-box}
+    html,body{
+      width:100%;
+      margin:0;
+      padding:0;
+      overflow-x:hidden;
+    }
+    body{font-family:Arial;background:#0f172a;color:#fff}
+    .top{
+      padding:14px 12px;
+      border-bottom:1px solid #1f2937;
+      background:#020617;
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:flex-start;
+      flex-wrap:wrap; /* مهم للجوال */
+    }
+    .wrap{max-width:100%;margin:0 auto;padding:12px}
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    @media(min-width:900px){
+      .wrap{max-width:860px}
+      .grid{grid-template-columns:1.2fr 0.8fr}
+    }
+    .card{
+      background:#020617;
+      border:1px solid #1f2937;
+      border-radius:14px;
+      padding:14px;
+    }
     .muted{color:#cbd5e1}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0b1220;border:1px solid #334155;font-size:12px}
-    .pkg{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed #334155;gap:10px}
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#0b1220;
+      border:1px solid #334155;
+      font-size:12px;
+      margin-top:6px;
+    }
+    .pkg{
+      display:flex;
+      flex-direction:column; /* للجوال */
+      gap:10px;
+      padding:12px 0;
+      border-bottom:1px dashed #334155;
+    }
     .pkg:last-child{border-bottom:none}
-    button{padding:10px 12px;border:none;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}
-    input{padding:8px;border-radius:8px;border:1px solid #334155;background:#020617;color:#fff;width:100%}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid #1f2937;padding:8px;text-align:left;font-size:13px}
+    @media(min-width:600px){
+      .pkg{flex-direction:row;align-items:center}
+    }
+    button{
+      padding:10px 12px;
+      border:none;
+      border-radius:10px;
+      background:#2563eb;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      font-size:16px;
+      width:100%;
+    }
+    input{
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #334155;
+      background:#020617;
+      color:#fff;
+      width:100%;
+      font-size:16px; /* يمنع تكبير iOS */
+    }
+    .table-wrap{
+      width:100%;
+      overflow-x:auto; /* يمنع كسر الصفحة */
+    }
+    table{width:100%;border-collapse:collapse;min-width:520px}
+    th,td{
+      border-bottom:1px solid #1f2937;
+      padding:8px;
+      text-align:left;
+      font-size:13px;
+      white-space:nowrap;
+    }
     .ok{color:#22c55e}
     .bad{color:#ef4444}
     .pend{color:#f59e0b}
@@ -55,7 +129,7 @@
               <div class="muted" style="font-size:13px">{{ fmt(p["price"]) }} LBP</div>
             </div>
 
-            <form method="post" action="/buy" style="flex:1;margin:0">
+            <form method="post" action="/buy" style="flex:1;margin:0;width:100%">
               <input type="hidden" name="package_id" value="{{ p['id'] }}"/>
 
               <input
@@ -63,10 +137,10 @@
                 name="user_number"
                 placeholder="Add Number"
                 required
-                style="margin-bottom:6px"
+                style="margin-bottom:8px"
               />
 
-              <button type="submit" style="width:100%">Request</button>
+              <button type="submit">Request</button>
             </form>
           </div>
         {% endfor %}
@@ -75,40 +149,42 @@
       <!-- Orders -->
       <div class="card">
         <h3 style="margin-top:0">My Orders</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Package</th>
-              <th>Price</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for o in orders %}
-            <tr>
-              <td>{{ o["id"] }}</td>
-              <td>{{ o["package_name"] }}</td>
-              <td>{{ fmt(o["package_price"]) }}</td>
-              <td>
-                {% if o["status"] == "approved" %}
-                  <span class="ok">Approved</span>
-                {% elif o["status"] == "rejected" %}
-                  <span class="bad">Rejected</span>
-                {% else %}
-                  <span class="pend">Pending</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-
-            {% if orders|length == 0 %}
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <td colspan="4" class="muted">No orders yet.</td>
+                <th>ID</th>
+                <th>Package</th>
+                <th>Price</th>
+                <th>Status</th>
               </tr>
-            {% endif %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+              <tr>
+                <td>{{ o["id"] }}</td>
+                <td>{{ o["package_name"] }}</td>
+                <td>{{ fmt(o["package_price"]) }}</td>
+                <td>
+                  {% if o["status"] == "approved" %}
+                    <span class="ok">Approved</span>
+                  {% elif o["status"] == "rejected" %}
+                    <span class="bad">Rejected</span>
+                  {% else %}
+                    <span class="pend">Pending</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+
+              {% if orders|length == 0 %}
+                <tr>
+                  <td colspan="4" class="muted">No orders yet.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
