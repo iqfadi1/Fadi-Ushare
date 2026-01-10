@@ -1,14 +1,27 @@
-<footer style="
+<footer class="app-footer">
+  © 2026 متجر فادي. جميع الحقوق محفوظة.
+</footer>
+
+<style>
+.app-footer{
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
+  padding: 10px 6px;
   text-align: center;
-  padding: 10px 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #94a3b8;
   background: #020617;
   border-top: 1px solid #1f2937;
-">
-  © 2026 Fadi Store. All rights reserved.
-</footer>
+  line-height: 1.4;
+}
+
+/* تحسين للموبايل */
+@media (max-width: 480px){
+  .app-footer{
+    font-size: 11px;
+    padding: 8px 4px;
+  }
+}
+</style>
