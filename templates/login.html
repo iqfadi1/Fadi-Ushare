@@ -78,10 +78,25 @@
       text-decoration:none;
       font-weight:600;
     }
-  </style>
+  
+html, body{
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-fixed{
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+</style>
 </head>
 
 <body>
+<div class="page-fixed">
   <div class="card">
     <h1>Ushare Alfa</h1>
     <p>Login with the phone & password provided by the admin.</p>
@@ -108,5 +123,6 @@
   </div>
 
 {% include "footer.html" %}
+</div>
 </body>
 </html>
